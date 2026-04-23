@@ -40,8 +40,8 @@ export default function Page() {
   // ── SETUP ────────────────────────────────────────────────────
   if (state.phase === 'SETUP') {
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-80 flex flex-col gap-6">
+      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+        <div className="w-full max-w-xs flex flex-col gap-6">
           <div className="text-center flex flex-col gap-1">
             <div className="text-xs font-mono text-zinc-600 tracking-widest">NEGOTIATION</div>
             <h1 className="text-xl font-mono text-zinc-100 tracking-widest">인질 협상</h1>
@@ -74,8 +74,8 @@ export default function Page() {
   if (state.phase === 'WIN' || state.phase === 'LOSE') {
     const isWin = state.phase === 'WIN'
     return (
-      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-        <div className="w-96 flex flex-col gap-6 items-center">
+      <main className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm flex flex-col gap-6 items-center">
           <div className="text-center flex flex-col gap-2">
             <div className={`text-2xl font-mono tracking-widest ${isWin ? 'text-zinc-100' : 'text-red-400'}`}>
               {isWin ? '협상 성공' : '협상 실패'}
@@ -89,7 +89,6 @@ export default function Page() {
             </div>
           </div>
 
-          {/* 대화 요약 */}
           <div ref={logRef} className="w-full border border-zinc-800 rounded p-3 flex flex-col gap-2 max-h-64 overflow-y-auto">
             {state.messages.map((m, i) => (
               <div key={i} className={`text-xs font-mono ${m.role === 'player' ? 'text-zinc-400' : 'text-zinc-300'}`}>
@@ -112,11 +111,11 @@ export default function Page() {
   const scenario = state.scenario!
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] flex justify-center py-6">
-      <div className="w-[720px] flex flex-col gap-4 px-4">
+    <main className="h-screen overflow-hidden bg-[#0a0a0a] flex justify-center">
+      <div className="w-full max-w-[720px] flex flex-col h-full px-4 py-4 gap-3">
 
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-xs font-mono text-zinc-600 tracking-widest">NEGOTIATION</span>
             <span className="text-xs font-mono text-zinc-700">{scenario.location}</span>
@@ -130,12 +129,12 @@ export default function Page() {
         </div>
 
         {/* 상태 패널 */}
-        <div className="border border-zinc-800 rounded p-4 flex flex-col gap-3">
+        <div className="border border-zinc-800 rounded p-3 flex flex-col gap-2 shrink-0">
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono text-zinc-600">저항의지</span>
             <span className={`text-xs font-mono ${willState.color}`}>{willState.label}</span>
           </div>
-          <div className="h-2 bg-zinc-900 rounded overflow-hidden">
+          <div className="h-1.5 bg-zinc-900 rounded overflow-hidden">
             <div className={`h-full ${willState.bar} transition-all duration-500`} style={{ width: `${state.tension}%` }} />
           </div>
           <div className="flex items-center justify-between text-xs font-mono text-zinc-700">
@@ -144,7 +143,7 @@ export default function Page() {
           </div>
 
           {/* 인질 현황 */}
-          <div className="border-t border-zinc-900 pt-3 flex items-center justify-between">
+          <div className="border-t border-zinc-900 pt-2 flex items-center justify-between">
             <span className="text-xs font-mono text-zinc-600">인질 현황</span>
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono text-zinc-500">
@@ -161,7 +160,7 @@ export default function Page() {
           <div className="flex gap-1 flex-wrap">
             {Array.from({ length: scenario.hostageCount }).map((_, i) => (
               <div key={i}
-                className={`w-4 h-4 rounded-sm border transition-colors duration-300 ${
+                className={`w-3.5 h-3.5 rounded-sm border transition-colors duration-300 ${
                   i < scenario.hostageCount - state.hostageCount
                     ? 'border-green-800 bg-green-900/40'
                     : 'border-zinc-700 bg-zinc-800'
@@ -173,10 +172,10 @@ export default function Page() {
 
         {/* 상황 브리핑 (최초 1회) */}
         {state.messages.length === 0 && (
-          <div className="border border-zinc-800 rounded p-4 flex flex-col gap-3">
+          <div className="border border-zinc-800 rounded p-3 flex flex-col gap-2 shrink-0">
             <div className="text-xs font-mono text-zinc-600">상황 브리핑</div>
             <p className="text-xs font-mono text-zinc-400 leading-relaxed">{scenario.briefing}</p>
-            <div className="border-t border-zinc-900 pt-3 flex flex-col gap-1">
+            <div className="border-t border-zinc-900 pt-2 flex flex-col gap-1">
               <div className="text-xs font-mono text-zinc-600">요구사항</div>
               {scenario.character.demands.map((d, i) => (
                 <span key={i} className="text-xs font-mono text-zinc-500">· {d}</span>
@@ -190,7 +189,7 @@ export default function Page() {
 
         {/* 이벤트 배너 */}
         {state.lastEvent && state.lastEvent !== null && (
-          <div className={`px-3 py-2 rounded text-xs font-mono border ${
+          <div className={`px-3 py-2 rounded text-xs font-mono border shrink-0 ${
             state.lastEvent === 'surrender' || state.lastEvent === 'hostage_released' || state.lastEvent === 'breakdown'
               ? 'border-green-900 text-green-500 bg-green-950/20'
               : 'border-red-900 text-red-500 bg-red-950/20'
@@ -205,7 +204,7 @@ export default function Page() {
         )}
 
         {/* 대화 로그 */}
-        <div ref={logRef} className="flex flex-col gap-3 min-h-[280px] max-h-[400px] overflow-y-auto border border-zinc-900 rounded p-4">
+        <div ref={logRef} className="flex-1 min-h-0 overflow-y-auto border border-zinc-900 rounded p-4 flex flex-col gap-3">
           {state.messages.map((m, i) => (
             <div key={i} className={`flex flex-col gap-0.5 ${m.role === 'player' ? 'items-end' : 'items-start'}`}>
               <span className="text-xs font-mono text-zinc-700">
@@ -230,7 +229,7 @@ export default function Page() {
         </div>
 
         {/* 입력창 */}
-        <div className="flex gap-2 items-end">
+        <div className="flex gap-2 items-end shrink-0">
           <textarea
             ref={textareaRef}
             value={input}
@@ -242,7 +241,7 @@ export default function Page() {
                 if (textareaRef.current) textareaRef.current.style.height = 'auto'
               }
             }}
-            placeholder="협상가로서 말을 건네세요... (Shift+Enter 줄바꿈)"
+            placeholder="협상가로서 말을 건네세요..."
             disabled={busy}
             rows={1}
             className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-200 focus:outline-none focus:border-zinc-600 disabled:opacity-40 placeholder:text-zinc-700 resize-none overflow-hidden leading-relaxed"
