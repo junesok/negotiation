@@ -64,7 +64,7 @@ export function useNegotiation() {
     let phase: Phase = gs.phase
     if (event === 'surrender' || newTension <= 5) {
       phase = 'SURRENDERING'
-    } else if (turnsLeft <= 0 || newTension >= 95 || (gs.scenario && killedCount >= gs.scenario.hostageCount)) {
+    } else if (turnsLeft <= 0 || (gs.scenario && killedCount >= gs.scenario.hostageCount)) {
       phase = 'LOSE'
     }
 

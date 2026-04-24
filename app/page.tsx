@@ -84,9 +84,7 @@ export default function Page() {
                   : `${state.scenario?.character.name}이(가) 항복했습니다. 인질 ${state.hostageCount}명 전원 안전.`
                 : state.scenario && state.killedCount >= state.scenario.hostageCount
                   ? '인질 전원이 사망했습니다. 협상이 완전히 실패했습니다.'
-                  : state.tension >= 95
-                    ? '긴장이 극도로 치달아 사건이 최악으로 치달았습니다.'
-                    : '제한 시간이 초과되어 특공대가 진입했습니다.'}
+                  : '제한 시간이 초과되어 특공대가 진입했습니다.'}
             </div>
           </div>
 
