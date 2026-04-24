@@ -7,6 +7,7 @@ import TokenUsage from '@/components/TokenUsage'
 export default function Page() {
   const { state, busy, isTyping, typingText, startGame, sendMessage, reset } = useNegotiation()
   const [input, setInput] = useState('')
+  const [briefingOpen, setBriefingOpen] = useState(true)
   const logRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -170,22 +171,32 @@ export default function Page() {
           </div>
         </div>
 
-        {/* 상황 브리핑 (최초 1회) */}
-        {state.messages.length === 0 && (
-          <div className="border border-zinc-800 rounded p-3 flex flex-col gap-2 shrink-0">
-            <div className="text-xs font-mono text-zinc-600">상황 브리핑</div>
-            <p className="text-xs font-mono text-zinc-400 leading-relaxed">{scenario.briefing}</p>
-            <div className="border-t border-zinc-900 pt-2 flex flex-col gap-1">
-              <div className="text-xs font-mono text-zinc-600">요구사항</div>
-              {scenario.character.demands.map((d, i) => (
-                <span key={i} className="text-xs font-mono text-zinc-500">· {d}</span>
-              ))}
+        {/* 상황 브리핑 */}
+        <div className="border border-zinc-800 rounded shrink-0">
+          <button
+            onClick={() => setBriefingOpen(o => !o)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-mono text-zinc-600 hover:text-zinc-400 transition-colors"
+          >
+            <span>상황 브리핑</span>
+            <span className="text-zinc-700">{briefingOpen ? '−' : '+'}</span>
+          </button>
+          {briefingOpen && (
+            <div className="px-3 pb-3 flex flex-col gap-2 border-t border-zinc-900">
+              <p className="text-xs font-mono text-zinc-400 leading-relaxed pt-2">{scenario.briefing}</p>
+              <div className="flex flex-col gap-1">
+                <div className="text-xs font-mono text-zinc-600">요구사항</div>
+                {scenario.character.demands.map((d, i) => (
+                  <span key={i} className="text-xs font-mono text-zinc-500">· {d}</span>
+                ))}
+              </div>
+              {state.messages.length === 0 && (
+                <div className="text-xs font-mono text-zinc-700">
+                  저항의지를 0으로 만드세요. 첫 마디를 건네세요.
+                </div>
+              )}
             </div>
-            <div className="text-xs font-mono text-zinc-700">
-              저항의지를 0으로 만드세요. 첫 마디를 건네세요.
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* 이벤트 배너 */}
         {state.lastEvent && state.lastEvent !== null && (
