@@ -82,9 +82,11 @@ export default function Page() {
                 ? state.killedCount > 0
                   ? `${state.scenario?.character.name}이(가) 항복했습니다. 인질 ${(state.scenario?.hostageCount ?? 0) - state.killedCount}명 생존, ${state.killedCount}명 사망.`
                   : `${state.scenario?.character.name}이(가) 항복했습니다. 인질 ${state.scenario?.hostageCount ?? 0}명 전원 안전.`
-                : state.scenario && state.killedCount >= state.scenario.hostageCount
-                  ? '인질 전원이 사망했습니다. 협상이 완전히 실패했습니다.'
-                  : '제한 시간이 초과되어 특공대가 진입했습니다.'}
+                : state.loseReason === 'suspect_fired'
+                  ? '인질범이 경찰에 발포했습니다. 특공대가 진입해 인질범을 제압했습니다.'
+                  : state.loseReason === 'all_killed'
+                    ? '인질 전원이 사망했습니다. 협상이 완전히 실패했습니다.'
+                    : '제한 시간이 초과되어 특공대가 진입했습니다.'}
             </div>
           </div>
 

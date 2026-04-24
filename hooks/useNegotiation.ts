@@ -62,10 +62,18 @@ export function useNegotiation() {
     }
 
     let phase: Phase = gs.phase
+    let loseReason: GameState['loseReason'] = gs.loseReason
     if (event === 'surrender' || newTension <= 5) {
       phase = 'SURRENDERING'
-    } else if (turnsLeft <= 0 || (gs.scenario && killedCount >= gs.scenario.hostageCount)) {
+    } else if (hostageCount === 0 && newTension >= 90) {
       phase = 'LOSE'
+      loseReason = 'suspect_fired'
+    } else if (gs.scenario && killedCount >= gs.scenario.hostageCount) {
+      phase = 'LOSE'
+      loseReason = 'all_killed'
+    } else if (turnsLeft <= 0) {
+      phase = 'LOSE'
+      loseReason = 'timeout'
     }
 
     const doClosingScene = async (scenario: Scenario, messages: Message[]) => {
@@ -140,6 +148,7 @@ export function useNegotiation() {
           killedCount,
           lastEvent: event,
           phase,
+          loseReason,
         }))
         if (phase === 'SURRENDERING') {
           doClosingScene(gs.scenario!, finalMessages)

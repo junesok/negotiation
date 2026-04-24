@@ -71,7 +71,7 @@ event 규칙 (조건에 맞는 것 하나만 선택):
 - "threat": 긴장도가 85~89일 때 위협 발언 시 (긴장도 90 이상에서는 사용 금지)
 - "hostage_released": 협상가가 요구사항 하나를 들어주고 긴장도가 40 이하일 때
 - "breakdown": 긴장도가 25 이하로 처음 떨어질 때
-- "surrender": 긴장도가 10 이하이거나 핵심 요구가 모두 수용됐을 때
+- "surrender": 긴장도가 10 이하일 때
 - null: 위 조건 중 해당 없을 때`
 
   const chatHistory = history.slice(-10).map(m => ({

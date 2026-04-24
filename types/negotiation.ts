@@ -38,4 +38,5 @@ export interface GameState {
   killedCount: number      // 사망한 인질 수
   turnsLeft: number
   lastEvent: EventType | null
+  loseReason?: 'timeout' | 'all_killed' | 'suspect_fired'
 }
