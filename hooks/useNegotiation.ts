@@ -94,6 +94,7 @@ export function useNegotiation() {
             setState(s => ({
               ...s,
               messages: [...s.messages, closingMsg, winMsg],
+              hostageCount: 0,
               phase: 'WIN',
             }))
             setBusy(false)
