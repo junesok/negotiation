@@ -84,7 +84,14 @@ event 규칙 (조건에 맞는 것 하나만 선택):
   const result = await callGpt(systemPrompt, chatHistory)
 
   const tensionDelta = Math.max(-20, Math.min(20, result.tensionDelta ?? 0))
-  const event: EventType | null = result.event ?? null
+  const newTension = Math.max(0, Math.min(100, tension + tensionDelta))
+  let event: EventType | null = result.event ?? null
+
+  // 긴장도 90+ 도발 시 서버에서 강제로 인질 사망 처리
+  // (AI가 threat만 반환해도 실제 결과로 전환)
+  if (newTension >= 90 && (event === 'threat' || event === null)) {
+    event = 'hostage_killed'
+  }
 
   return NextResponse.json({
     response: result.response ?? '...',
