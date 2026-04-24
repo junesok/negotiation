@@ -83,20 +83,35 @@ export default function Page() {
             </div>
             <div className="text-xs font-mono text-zinc-500">
               {isWin
-                ? `${state.scenario?.character.name}이(가) 항복했습니다. 인질 ${state.hostageCount}명 전원 안전.`
-                : state.tension >= 95
-                  ? '긴장이 극도로 치달아 사건이 최악으로 치달았습니다.'
-                  : '제한 시간이 초과되어 특공대가 진입했습니다.'}
+                ? state.killedCount > 0
+                  ? `${state.scenario?.character.name}이(가) 항복했습니다. 인질 ${state.hostageCount}명 생존, ${state.killedCount}명 사망.`
+                  : `${state.scenario?.character.name}이(가) 항복했습니다. 인질 ${state.hostageCount}명 전원 안전.`
+                : state.scenario && state.killedCount >= state.scenario.hostageCount
+                  ? '인질 전원이 사망했습니다. 협상이 완전히 실패했습니다.'
+                  : state.tension >= 95
+                    ? '긴장이 극도로 치달아 사건이 최악으로 치달았습니다.'
+                    : '제한 시간이 초과되어 특공대가 진입했습니다.'}
             </div>
           </div>
 
           <div ref={logRef} className="w-full border border-zinc-800 rounded p-3 flex flex-col gap-2 max-h-64 overflow-y-auto">
-            {state.messages.map((m, i) => (
-              <div key={i} className={`text-xs font-mono ${m.role === 'player' ? 'text-zinc-400' : 'text-zinc-300'}`}>
-                <span className="text-zinc-600">{m.role === 'player' ? '협상가' : state.scenario?.character.name}: </span>
-                {m.text}
-              </div>
-            ))}
+            {state.messages.map((m, i) => {
+              if (m.role === 'event') {
+                const isPositive = m.eventType === 'hostage_released' || m.eventType === 'breakdown' || m.eventType === 'surrender'
+                const isKilled = m.eventType === 'hostage_killed'
+                return (
+                  <div key={i} className={`text-xs font-mono text-center ${isKilled ? 'text-red-500' : isPositive ? 'text-green-600' : 'text-orange-500'}`}>
+                    — {m.text} —
+                  </div>
+                )
+              }
+              return (
+                <div key={i} className={`text-xs font-mono ${m.role === 'player' ? 'text-zinc-400' : 'text-zinc-300'}`}>
+                  <span className="text-zinc-600">{m.role === 'player' ? '협상가' : state.scenario?.character.name}: </span>
+                  {m.text}
+                </div>
+              )
+            })}
           </div>
 
           <button onClick={reset}
@@ -148,8 +163,16 @@ export default function Page() {
             <span className="text-xs font-mono text-zinc-600">인질 현황</span>
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono text-zinc-500">
-                석방 <span className="text-green-600 tabular-nums">{scenario.hostageCount - state.hostageCount}</span>명
+                석방 <span className="text-green-600 tabular-nums">{scenario.hostageCount - state.hostageCount - state.killedCount}</span>명
               </span>
+              {state.killedCount > 0 && (
+                <>
+                  <span className="text-xs font-mono text-zinc-700">|</span>
+                  <span className="text-xs font-mono text-zinc-500">
+                    사망 <span className="text-red-500 tabular-nums">{state.killedCount}</span>명
+                  </span>
+                </>
+              )}
               <span className="text-xs font-mono text-zinc-700">|</span>
               <span className="text-xs font-mono text-zinc-500">
                 억류 <span className="text-zinc-300 tabular-nums">{state.hostageCount}</span>명
@@ -158,17 +181,24 @@ export default function Page() {
           </div>
 
           {/* 인질 아이콘 */}
-          <div className="flex gap-1 flex-wrap">
-            {Array.from({ length: scenario.hostageCount }).map((_, i) => (
-              <div key={i}
-                className={`w-3.5 h-3.5 rounded-sm border transition-colors duration-300 ${
-                  i < scenario.hostageCount - state.hostageCount
-                    ? 'border-green-800 bg-green-900/40'
-                    : 'border-zinc-700 bg-zinc-800'
-                }`}
-              />
-            ))}
-          </div>
+          {(() => {
+            const released = scenario.hostageCount - state.hostageCount - state.killedCount
+            return (
+              <div className="flex gap-1 flex-wrap">
+                {Array.from({ length: scenario.hostageCount }).map((_, i) => (
+                  <div key={i}
+                    className={`w-3.5 h-3.5 rounded-sm border transition-colors duration-300 ${
+                      i < released
+                        ? 'border-green-800 bg-green-900/40'
+                        : i < released + state.killedCount
+                          ? 'border-red-800 bg-red-900/50'
+                          : 'border-zinc-700 bg-zinc-800'
+                    }`}
+                  />
+                ))}
+              </div>
+            )
+          })()}
         </div>
 
         {/* 상황 브리핑 */}
@@ -198,38 +228,39 @@ export default function Page() {
           )}
         </div>
 
-        {/* 이벤트 배너 */}
-        {state.lastEvent && state.lastEvent !== null && (
-          <div className={`px-3 py-2 rounded text-xs font-mono border shrink-0 ${
-            state.lastEvent === 'surrender' || state.lastEvent === 'hostage_released' || state.lastEvent === 'breakdown'
-              ? 'border-green-900 text-green-500 bg-green-950/20'
-              : 'border-red-900 text-red-500 bg-red-950/20'
-          }`}>
-            {{
-              threat: '위협: 인질범이 극단적인 발언을 했습니다.',
-              hostage_released: '인질 1명이 석방되었습니다.',
-              breakdown: '인질범이 감정적으로 무너지고 있습니다.',
-              surrender: '인질범이 항복 의사를 보입니다.',
-            }[state.lastEvent]}
-          </div>
-        )}
-
         {/* 대화 로그 */}
         <div ref={logRef} className="flex-1 min-h-0 overflow-y-auto border border-zinc-900 rounded p-4 flex flex-col gap-3">
-          {state.messages.map((m, i) => (
-            <div key={i} className={`flex flex-col gap-0.5 ${m.role === 'player' ? 'items-end' : 'items-start'}`}>
-              <span className="text-xs font-mono text-zinc-700">
-                {m.role === 'player' ? '협상가' : scenario.character.name}
-              </span>
-              <div className={`max-w-[85%] px-3 py-2 rounded text-xs font-mono leading-relaxed ${
-                m.role === 'player'
-                  ? 'bg-zinc-800 text-zinc-200'
-                  : 'border border-zinc-800 text-zinc-300'
-              }`}>
-                {m.text}
+          {state.messages.map((m, i) => {
+            if (m.role === 'event') {
+              const isPositive = m.eventType === 'hostage_released' || m.eventType === 'breakdown' || m.eventType === 'surrender'
+              const isKilled = m.eventType === 'hostage_killed'
+              return (
+                <div key={i} className="flex items-center gap-2 my-1">
+                  <div className="flex-1 h-px bg-zinc-800" />
+                  <span className={`text-xs font-mono px-2 shrink-0 ${
+                    isKilled ? 'text-red-400' : isPositive ? 'text-green-500' : 'text-orange-400'
+                  }`}>
+                    {m.text}
+                  </span>
+                  <div className="flex-1 h-px bg-zinc-800" />
+                </div>
+              )
+            }
+            return (
+              <div key={i} className={`flex flex-col gap-0.5 ${m.role === 'player' ? 'items-end' : 'items-start'}`}>
+                <span className="text-xs font-mono text-zinc-700">
+                  {m.role === 'player' ? '협상가' : scenario.character.name}
+                </span>
+                <div className={`max-w-[85%] px-3 py-2 rounded text-xs font-mono leading-relaxed ${
+                  m.role === 'player'
+                    ? 'bg-zinc-800 text-zinc-200'
+                    : 'border border-zinc-800 text-zinc-300'
+                }`}>
+                  {m.text}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           {busy && !isTyping && (
             <div className="flex items-start">
               <div className="border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-700 animate-pulse">

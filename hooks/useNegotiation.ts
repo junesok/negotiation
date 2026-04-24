@@ -1,6 +1,6 @@
 'use client'
 import { useState, useCallback, useRef } from 'react'
-import type { GameState, Scenario, EventType } from '@/types/negotiation'
+import type { GameState, Scenario, EventType, Message, Phase } from '@/types/negotiation'
 import axios from 'axios'
 
 const INIT: GameState = {
@@ -9,6 +9,7 @@ const INIT: GameState = {
   messages: [],
   tension: 70,
   hostageCount: 0,
+  killedCount: 0,
   turnsLeft: 30,
   lastEvent: null,
 }
@@ -53,13 +54,55 @@ export function useNegotiation() {
     const turnsLeft = gs.turnsLeft - 1
 
     let hostageCount = gs.hostageCount
+    let killedCount = gs.killedCount
     if (event === 'hostage_released' && hostageCount > 0) hostageCount -= 1
+    if (event === 'hostage_killed' && hostageCount > 0) {
+      hostageCount -= 1
+      killedCount += 1
+    }
 
-    let phase = gs.phase
+    let phase: Phase = gs.phase
     if (event === 'surrender' || newTension <= 5) {
-      phase = 'WIN'
-    } else if (turnsLeft <= 0 || newTension >= 95) {
+      phase = 'SURRENDERING'
+    } else if (turnsLeft <= 0 || newTension >= 95 || (gs.scenario && killedCount >= gs.scenario.hostageCount)) {
       phase = 'LOSE'
+    }
+
+    const doClosingScene = async (scenario: Scenario, messages: Message[]) => {
+      try {
+        const closingRes = await axios.post('/api/negotiate', {
+          scenario,
+          surrenderScene: true,
+          history: messages,
+          playerMessage: '',
+          tension: 0,
+          turnsLeft: 0,
+        })
+        const closingResponse: string = closingRes.data.response ?? '...'
+        setIsTyping(true)
+        setTypingText('')
+        let ci = 0
+        typingInterval.current = setInterval(() => {
+          ci++
+          setTypingText(closingResponse.slice(0, ci))
+          if (ci >= closingResponse.length) {
+            clearInterval(typingInterval.current!)
+            typingInterval.current = null
+            setIsTyping(false)
+            const closingMsg = { role: 'suspect' as const, text: closingResponse }
+            const winMsg: Message = { role: 'event', text: '인질범이 무기를 내려놓고 스스로 걸어나왔습니다.', eventType: 'surrender' }
+            setState(s => ({
+              ...s,
+              messages: [...s.messages, closingMsg, winMsg],
+              phase: 'WIN',
+            }))
+            setBusy(false)
+          }
+        }, 25)
+      } catch {
+        setState(s => ({ ...s, phase: 'WIN' }))
+        setBusy(false)
+      }
     }
 
     // 타이프라이터 애니메이션
@@ -75,16 +118,33 @@ export function useNegotiation() {
         typingInterval.current = null
         setIsTyping(false)
         const suspectMsg = { role: 'suspect' as const, text: response }
+        const eventMessages: Message[] = event ? [{
+          role: 'event',
+          text: {
+            threat: '인질범이 극단적인 위협을 가했습니다.',
+            hostage_released: '인질 1명이 석방되었습니다.',
+            hostage_killed: '인질 1명이 사망했습니다.',
+            breakdown: '인질범이 감정적으로 무너지고 있습니다.',
+            surrender: '인질범이 항복 의사를 보입니다.',
+          }[event],
+          eventType: event,
+        }] : []
+        const finalMessages = [...updatedMessages, suspectMsg, ...eventMessages]
         setState(s => ({
           ...s,
-          messages: [...updatedMessages, suspectMsg],
+          messages: finalMessages,
           tension: newTension,
           turnsLeft,
           hostageCount,
+          killedCount,
           lastEvent: event,
           phase,
         }))
-        setBusy(false)
+        if (phase === 'SURRENDERING') {
+          doClosingScene(gs.scenario!, finalMessages)
+        } else {
+          setBusy(false)
+        }
       }
     }, 25)
   }, [busy])

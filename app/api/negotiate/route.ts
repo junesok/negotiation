@@ -16,10 +16,22 @@ async function callGpt(system: string, messages: { role: 'user' | 'assistant'; c
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { scenario, playerMessage, history, tension, turnsLeft }:
-    { scenario: Scenario; playerMessage: string; history: Message[]; tension: number; turnsLeft: number } = body
+  const { scenario, playerMessage, history, tension, turnsLeft, surrenderScene }:
+    { scenario: Scenario; playerMessage: string; history: Message[]; tension: number; turnsLeft: number; surrenderScene?: boolean } = body
 
   const c = scenario.character
+
+  if (surrenderScene) {
+    const closingPrompt = `당신은 인질 협상 게임의 인질범 "${c.name}" (${c.age}세)입니다.
+협상가의 끈질긴 설득 끝에 당신은 완전히 무너져 항복을 결심했습니다.
+무기를 바닥에 천천히 내려놓고, 두 손을 들며, 스스로 문을 향해 걷습니다.
+이 마지막 순간 당신의 심경과 행동을 캐릭터 목소리로 2~3문장으로 표현하세요.
+분노나 위협 없이, 체념·안도·허탈·눈물 등 진짜 감정으로 표현하세요.
+
+JSON: {"response": "캐릭터의 마지막 독백 또는 말", "tensionDelta": 0, "event": null}`
+    const result = await callGpt(closingPrompt, [])
+    return NextResponse.json({ response: result.response ?? '...', tensionDelta: 0, event: null })
+  }
 
   const systemPrompt = `당신은 인질 협상 게임의 인질범 "${c.name}" (${c.age}세)입니다.
 
@@ -53,12 +65,13 @@ JSON 형식으로 응답:
 {
   "response": "캐릭터의 실제 대사 (2~4문장)",
   "tensionDelta": -15 ~ +20 사이 정수,
-  "event": null | "threat" | "hostage_released" | "breakdown" | "surrender"
+  "event": null | "threat" | "hostage_released" | "hostage_killed" | "breakdown" | "surrender"
 }
 
 event 규칙:
 - "threat": 긴장도가 85 이상이고 위협 발언 시
 - "hostage_released": 협상가가 요구사항 하나를 들어주고 긴장도가 40 이하일 때
+- "hostage_killed": 긴장도가 80 이상이고 협상가가 절대 양보 못하는 것을 건드리거나 심각하게 자극했을 때. 실제로 인질 한 명을 해치는 극단적 행동을 취함. 남은 인질이 있을 때만 사용.
 - "breakdown": 긴장도가 25 이하로 처음 떨어질 때
 - "surrender": 긴장도가 10 이하이거나 핵심 요구가 모두 수용됐을 때`
 

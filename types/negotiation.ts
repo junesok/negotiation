@@ -1,8 +1,9 @@
-export type Phase = 'SETUP' | 'PLAYING' | 'WIN' | 'LOSE'
+export type Phase = 'SETUP' | 'PLAYING' | 'SURRENDERING' | 'WIN' | 'LOSE'
 
 export type EventType =
   | 'threat'           // 위협 발언
   | 'hostage_released' // 인질 석방
+  | 'hostage_killed'   // 인질 제거
   | 'breakdown'        // 감정 붕괴 (협상 여지)
   | 'surrender'        // 항복
 
@@ -23,8 +24,9 @@ export interface Scenario {
 }
 
 export interface Message {
-  role: 'player' | 'suspect'
+  role: 'player' | 'suspect' | 'event'
   text: string
+  eventType?: EventType
 }
 
 export interface GameState {
@@ -32,7 +34,8 @@ export interface GameState {
   scenario: Scenario | null
   messages: Message[]
   tension: number          // 0~100 (낮을수록 협상 여지)
-  hostageCount: number
+  hostageCount: number     // 현재 억류 중인 인질 수
+  killedCount: number      // 사망한 인질 수
   turnsLeft: number
   lastEvent: EventType | null
 }
