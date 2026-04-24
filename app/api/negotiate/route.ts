@@ -66,12 +66,13 @@ JSON 형식으로 응답:
   "event": null | "threat" | "hostage_released" | "hostage_killed" | "breakdown" | "surrender"
 }
 
-event 규칙:
-- "threat": 긴장도가 85 이상이고 위협 발언 시
+event 규칙 (조건에 맞는 것 하나만 선택):
+- "hostage_killed": 긴장도가 90 이상이고 협상가가 도발·조롱·무시 등 자극적인 발언을 했을 때. 이 조건이 맞으면 "threat" 대신 반드시 이것을 선택. 남은 인질이 있을 때만 사용.
+- "threat": 긴장도가 85~89일 때 위협 발언 시 (긴장도 90 이상에서는 사용 금지)
 - "hostage_released": 협상가가 요구사항 하나를 들어주고 긴장도가 40 이하일 때
-- "hostage_killed": 긴장도가 90 이상일 때 협상가의 발언이 조금이라도 자극적이거나 도발적이면 실제로 인질을 해침. 긴장도 90 이상에서는 매우 높은 확률로 발동. 남은 인질이 있을 때만 사용.
 - "breakdown": 긴장도가 25 이하로 처음 떨어질 때
-- "surrender": 긴장도가 10 이하이거나 핵심 요구가 모두 수용됐을 때`
+- "surrender": 긴장도가 10 이하이거나 핵심 요구가 모두 수용됐을 때
+- null: 위 조건 중 해당 없을 때`
 
   const chatHistory = history.slice(-10).map(m => ({
     role: (m.role === 'player' ? 'user' : 'assistant') as 'user' | 'assistant',
