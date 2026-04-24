@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { GameState, Scenario, EventType } from '@/types/negotiation'
 import axios from 'axios'
 
@@ -16,6 +16,9 @@ const INIT: GameState = {
 export function useNegotiation() {
   const [state, setState] = useState<GameState>(INIT)
   const [busy, setBusy] = useState(false)
+  const [typingText, setTypingText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const typingInterval = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const startGame = useCallback((scenario: Scenario) => {
     setState({
@@ -52,9 +55,6 @@ export function useNegotiation() {
     let hostageCount = gs.hostageCount
     if (event === 'hostage_released' && hostageCount > 0) hostageCount -= 1
 
-    const suspectMsg = { role: 'suspect' as const, text: response }
-
-    // 종료 조건 판단
     let phase = gs.phase
     if (event === 'surrender' || newTension <= 5) {
       phase = 'WIN'
@@ -62,20 +62,42 @@ export function useNegotiation() {
       phase = 'LOSE'
     }
 
-    setState(s => ({
-      ...s,
-      messages: [...updatedMessages, suspectMsg],
-      tension: newTension,
-      turnsLeft,
-      hostageCount,
-      lastEvent: event,
-      phase,
-    }))
+    // 타이프라이터 애니메이션
+    setIsTyping(true)
+    setTypingText('')
 
-    setBusy(false)
+    let idx = 0
+    typingInterval.current = setInterval(() => {
+      idx++
+      setTypingText(response.slice(0, idx))
+      if (idx >= response.length) {
+        clearInterval(typingInterval.current!)
+        typingInterval.current = null
+        setIsTyping(false)
+        const suspectMsg = { role: 'suspect' as const, text: response }
+        setState(s => ({
+          ...s,
+          messages: [...updatedMessages, suspectMsg],
+          tension: newTension,
+          turnsLeft,
+          hostageCount,
+          lastEvent: event,
+          phase,
+        }))
+        setBusy(false)
+      }
+    }, 25)
   }, [busy])
 
-  const reset = useCallback(() => setState(INIT), [])
+  const reset = useCallback(() => {
+    if (typingInterval.current) {
+      clearInterval(typingInterval.current)
+      typingInterval.current = null
+    }
+    setIsTyping(false)
+    setTypingText('')
+    setState(INIT)
+  }, [])
 
-  return { state, busy, startGame, sendMessage, reset }
+  return { state, busy, isTyping, typingText, startGame, sendMessage, reset }
 }

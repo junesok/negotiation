@@ -5,7 +5,7 @@ import { SCENARIOS } from '@/lib/scenarios'
 import TokenUsage from '@/components/TokenUsage'
 
 export default function Page() {
-  const { state, busy, startGame, sendMessage, reset } = useNegotiation()
+  const { state, busy, isTyping, typingText, startGame, sendMessage, reset } = useNegotiation()
   const [input, setInput] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -21,7 +21,7 @@ export default function Page() {
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
-  }, [state.messages])
+  }, [state.messages, typingText])
 
   const handleSend = () => {
     if (!input.trim() || busy) return
@@ -219,10 +219,18 @@ export default function Page() {
               </div>
             </div>
           ))}
-          {busy && (
+          {busy && !isTyping && (
             <div className="flex items-start">
               <div className="border border-zinc-800 rounded px-3 py-2 text-xs font-mono text-zinc-700 animate-pulse">
                 {scenario.character.name} ...
+              </div>
+            </div>
+          )}
+          {isTyping && (
+            <div className="flex flex-col gap-0.5 items-start">
+              <span className="text-xs font-mono text-zinc-700">{scenario.character.name}</span>
+              <div className="max-w-[85%] px-3 py-2 rounded text-xs font-mono leading-relaxed border border-zinc-800 text-zinc-300">
+                {typingText}<span className="animate-pulse">|</span>
               </div>
             </div>
           )}
