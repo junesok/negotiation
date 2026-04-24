@@ -2,12 +2,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNegotiation } from '@/hooks/useNegotiation'
 import { SCENARIOS } from '@/lib/scenarios'
-import TokenUsage from '@/components/TokenUsage'
 
 export default function Page() {
   const { state, busy, isTyping, typingText, startGame, sendMessage, reset } = useNegotiation()
   const [input, setInput] = useState('')
   const [briefingOpen, setBriefingOpen] = useState(true)
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false)
   const logRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -62,10 +62,6 @@ export default function Page() {
               </button>
             ))}
           </div>
-
-          <div className="flex justify-end">
-            <TokenUsage />
-          </div>
         </div>
       </main>
     )
@@ -116,7 +112,7 @@ export default function Page() {
 
           <button onClick={reset}
             className="py-2 px-6 text-xs font-mono border border-zinc-600 text-zinc-200 rounded hover:border-zinc-400 transition-colors tracking-widest">
-            다시 하기
+            목록으로
           </button>
         </div>
       </main>
@@ -133,15 +129,18 @@ export default function Page() {
         {/* Header */}
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono text-zinc-600 tracking-widest">NEGOTIATION</span>
+            <button
+              onClick={() => setShowQuitConfirm(true)}
+              className="text-xs font-mono text-zinc-600 hover:text-zinc-400 transition-colors tracking-widest"
+            >
+              ← 목록
+            </button>
+            <span className="text-xs font-mono text-zinc-800">|</span>
             <span className="text-xs font-mono text-zinc-700">{scenario.location}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <TokenUsage />
-            <span className={`text-xs font-mono tabular-nums px-2 py-0.5 border rounded ${state.turnsLeft <= 5 ? 'border-red-900 text-red-500' : 'border-zinc-800 text-zinc-500'}`}>
-              {state.turnsLeft}턴
-            </span>
-          </div>
+          <span className={`text-xs font-mono tabular-nums px-2 py-0.5 border rounded ${state.turnsLeft <= 5 ? 'border-red-900 text-red-500' : 'border-zinc-800 text-zinc-500'}`}>
+            {state.turnsLeft}턴
+          </span>
         </div>
 
         {/* 상태 패널 */}
@@ -303,6 +302,32 @@ export default function Page() {
           </button>
         </div>
       </div>
+
+      {/* 포기 확인 팝업 */}
+      {showQuitConfirm && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-[#111] border border-zinc-700 rounded p-6 flex flex-col gap-4 w-full max-w-xs">
+            <div className="flex flex-col gap-1">
+              <div className="text-sm font-mono text-zinc-200">협상을 포기하시겠습니까?</div>
+              <div className="text-xs font-mono text-zinc-600">진행 중인 협상이 종료되고 목록으로 돌아갑니다.</div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { reset(); setShowQuitConfirm(false) }}
+                className="flex-1 py-2 text-xs font-mono border border-zinc-600 text-zinc-300 rounded hover:border-zinc-400 transition-colors"
+              >
+                포기
+              </button>
+              <button
+                onClick={() => setShowQuitConfirm(false)}
+                className="flex-1 py-2 text-xs font-mono border border-zinc-800 text-zinc-500 rounded hover:border-zinc-600 transition-colors"
+              >
+                계속하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

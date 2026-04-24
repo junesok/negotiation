@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { openai } from '@/lib/openai'
-import { recordUsage } from '@/app/api/billing/route'
 import type { Scenario, Message, EventType } from '@/types/negotiation'
 
 async function callGpt(system: string, messages: { role: 'user' | 'assistant'; content: string }[]) {
@@ -10,7 +9,6 @@ async function callGpt(system: string, messages: { role: 'user' | 'assistant'; c
     response_format: { type: 'json_object' },
     max_tokens: 300,
   })
-  if (res.usage) recordUsage(res.usage.prompt_tokens, res.usage.completion_tokens)
   return JSON.parse(res.choices[0].message.content ?? '{}')
 }
 
